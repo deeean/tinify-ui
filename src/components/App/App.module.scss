@@ -1,0 +1,18 @@
+.app {
+  width: 100%;
+  height: 100vh;
+
+  .inner {
+    width: 100%;
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+
+    .fileItems {
+      width: 1000px;
+      display: flex;
+      flex-direction: column;
+    }
+  }
+}
