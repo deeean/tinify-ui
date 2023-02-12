@@ -13,15 +13,10 @@ import { useDropzone } from 'react-dropzone';
 import FileItem from '~/components/FileItem/FileItem';
 import produce from 'immer';
 import axios from 'axios';
+import JSZip from 'jszip';
+import classNames from 'classnames';
 
 export interface AppProps {}
-
-export enum FileInfoStatus {
-  Waiting,
-  Uploading,
-  Compressing,
-  Finished,
-}
 
 export interface FileInfo {
   id: string;
@@ -32,11 +27,21 @@ export interface FileInfo {
 const App: FC<AppProps> = memo(() => {
   const filesRef = useRef<{ [key: string]: File }>({});
   const requestFilesRef = useRef<{ [key: string]: boolean }>({});
-  const compressedFilesRef = useRef<{ [key: string]: Blob }>({  });
+  const compressedFilesRef = useRef<{ [key: string]: Blob }>({});
 
   const [files, setFiles] = useState<{ [key: string]: FileInfo }>({});
-  const [progresses, setProgresses] = useState<{ [key: string]: number }>({  });
-  const [compressedSizes, setCompressedSizes] = useState<{ [key: string]: number }>({  });
+  const [progresses, setProgresses] = useState<{ [key: string]: number }>({});
+  const [compressedSizes, setCompressedSizes] = useState<{
+    [key: string]: number;
+  }>({});
+
+  const hasFiles = useMemo(() => {
+    return Object.keys(files).length > 0;
+  }, [files]);
+
+  const isReadyToDownload = useMemo(() => {
+    return Object.keys(files).every((it) => compressedSizes[it] !== undefined);
+  }, [files, compressedSizes]);
 
   const onDrop = useCallback((files: Array<File>) => {
     const newFiles: { [key: string]: FileInfo } = {};
@@ -67,22 +72,22 @@ const App: FC<AppProps> = memo(() => {
       'image/jpeg': [],
       'image/png': [],
     },
-    noClick: true,
+    noClick: hasFiles,
   });
 
   useEffect(() => {
     const keys = Object.keys(files);
 
     const uploadFiles = keys
-      .filter(it => !requestFilesRef.current[it])
+      .filter((it) => !requestFilesRef.current[it])
       .map((it) => {
-      const info = files[it];
+        const info = files[it];
 
-      return {
-        id: info.id,
-        data: filesRef.current[info.id],
-      };
-    });
+        return {
+          id: info.id,
+          data: filesRef.current[info.id],
+        };
+      });
 
     for (let i = 0; i < uploadFiles.length; i++) {
       const { id, data } = uploadFiles[i];
@@ -95,7 +100,7 @@ const App: FC<AppProps> = memo(() => {
         .post<Blob>('http://localhost:3000/compress', formData, {
           responseType: 'blob',
           onUploadProgress: (progressEvent) => {
-            setProgresses(prevState => {
+            setProgresses((prevState) => {
               return produce(prevState, (draft) => {
                 draft[id] = progressEvent.progress || 0;
               });
@@ -105,11 +110,11 @@ const App: FC<AppProps> = memo(() => {
         .then((payload) => {
           if (payload.status === 200) {
             compressedFilesRef.current[id] = payload.data;
-            setCompressedSizes(prevState => {
-              return produce(prevState, draft => {
+            setCompressedSizes((prevState) => {
+              return produce(prevState, (draft) => {
                 draft[id] = payload.data.size;
-              })
-            })
+              });
+            });
           }
         });
     }
@@ -120,15 +125,83 @@ const App: FC<AppProps> = memo(() => {
 
     return keys.map((key) => {
       const it = files[key];
-      return <FileItem key={it.id} data={it} progress={progresses[key] || 0} compressedSize={compressedSizes[key] || null} />;
+      return (
+        <FileItem
+          key={it.id}
+          data={it}
+          progress={progresses[key] || 0}
+          compressedSize={compressedSizes[key] || null}
+        />
+      );
     });
   }, [files, progresses, compressedSizes]);
+
+  const handleDownloadAll = useCallback(() => {
+    if (!isReadyToDownload) {
+      return;
+    }
+
+    const keys = Object.keys(compressedFilesRef.current);
+    const fileNames = new Set<string>();
+    const zip = new JSZip();
+
+    for (let i = 0; i < keys.length; i++) {
+      const key = keys[i];
+      const { name } = filesRef.current[key];
+
+      const extname = name.split('.').pop();
+      const basename = name.replace(`.${extname}`, '');
+
+      let suffix = '';
+
+      for (let j = 2; ; j++) {
+        if (fileNames.has(`${basename}${suffix}.${extname}`)) {
+          suffix = ` (${j})`;
+        } else {
+          break;
+        }
+      }
+
+      const finalName = `${basename}${suffix}.${extname}`;
+
+      fileNames.add(finalName);
+      zip.file(finalName, compressedFilesRef.current[key]);
+    }
+
+    zip.generateAsync({ type: 'blob' }).then((content) => {
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(content);
+      a.download = 'tinified.zip';
+      a.click();
+    });
+  }, [isReadyToDownload]);
 
   return (
     <div className={styles.app}>
       <div {...getRootProps({ className: styles.inner })}>
         <input {...getInputProps()} />
-        <div className={styles.fileItems}>{renderedFileItems}</div>
+        {hasFiles ? (
+          <div className={styles.upload}>
+            <div className={styles.fileItems}>{renderedFileItems}</div>
+            <div className={styles.actions}>
+              <button
+                type="button"
+                className={classNames(styles.downloadAll, {
+                  [styles.waiting]: !isReadyToDownload,
+                })}
+                onClick={handleDownloadAll}
+              >
+                {isReadyToDownload ? 'Download all' : 'Waiting...'}
+              </button>
+            </div>
+          </div>
+        ) : (
+          <div className={styles.main}>
+            <h1>
+              Drop some files here, or click to select files to upload.
+            </h1>
+          </div>
+        )}
       </div>
     </div>
   );
