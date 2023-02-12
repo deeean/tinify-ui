@@ -10,15 +10,14 @@
     align-items: center;
 
     .upload {
+      width: 750px;
       .fileItems {
-        width: 1000px;
         padding: 20px 0;
         display: flex;
         flex-direction: column;
       }
 
       .actions {
-        max-width: 1000px;
         width: 100%;
         display: flex;
         padding-bottom: 40px;
@@ -44,10 +43,20 @@
     .main {
       display: flex;
       height: 100vh;
-      align-items: center;
+      align-items: flex-end;
+      justify-content: center;
+      flex-direction: column;
+      user-select: none;
 
       h1 {
-        user-select: none;
+        font-size: 14px;
+        margin-bottom: 12px;
+      }
+
+      p {
+        font-size: 12px;
+        margin-bottom: 12px;
+        color: #696969;
       }
     }
   }

@@ -198,8 +198,11 @@ const App: FC<AppProps> = memo(() => {
         ) : (
           <div className={styles.main}>
             <h1>
-              Drop some files here, or click to select files to upload.
+              Drop some files here, or click to select files to upload
             </h1>
+            <p>
+              Supported formats: JPEG, PNG
+            </p>
           </div>
         )}
       </div>

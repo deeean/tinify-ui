@@ -3,4 +3,4 @@
 
 This repository is a simple ui for [tinify](https://github.com/deeean/tinify)
 
-<img src="https://public-assets-deeean.s3.ap-northeast-2.amazonaws.com/demo.gif">
+<img src="https://public-assets-deeean.s3.ap-northeast-2.amazonaws.com/demo2.gif">
