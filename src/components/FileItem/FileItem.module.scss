@@ -8,7 +8,7 @@
   align-items: center;
 
   .name {
-    width: 300px;
+    width: 450px;
     white-space: nowrap;
     text-overflow: ellipsis;
     overflow: hidden;
@@ -27,7 +27,7 @@
 
   .progress {
     width: 250px;
-    height: 15px;
+    height: 20px;
     border: solid #94febf 1px;
     border-radius: 2px;
     overflow: hidden;
@@ -35,11 +35,12 @@
     .progressInner {
       height: 100%;
       background: #94febf;
+      overflow: hidden;
     }
 
     .progressStatus {
       position: absolute;
-      width: 100%;
+      width: 250px;
       height: 100%;
       display: flex;
       justify-content: center;
@@ -47,10 +48,14 @@
       left: 0;
       top: 0;
       color: #000000;
-    }
 
-    .saveRatio {
-      display: none;
+      &.primary {
+        color: #94febf;
+      }
     }
+  }
+
+  .percent {
+    margin-left: 12px;
   }
 }
