@@ -9,9 +9,10 @@ export interface FileItemProps {
   data: FileInfo;
   progress: number;
   compressedSize: number | null;
+  error: string | null;
 }
 
-const FileItem: FC<FileItemProps> = memo(({ data: { name, size }, progress, compressedSize }) => {
+const FileItem: FC<FileItemProps> = memo(({ data: { name, size }, progress, compressedSize, error }) => {
   const progressSpring = useSpring({
     width: progress * 100,
     config: {
@@ -41,6 +42,10 @@ const FileItem: FC<FileItemProps> = memo(({ data: { name, size }, progress, comp
   }, [compressedSize]);
 
   const statusDisplay = useMemo(() => {
+    if (error !== null) {
+      return error;
+    }
+
     if (progress === 0 && compressedSize === null) {
       return `Waiting`;
     }
@@ -53,14 +58,16 @@ const FileItem: FC<FileItemProps> = memo(({ data: { name, size }, progress, comp
       return `Uploading`
     }
 
-    return 'Finished';
-  }, [compressedSize, progress]);
+    return `Finished`;
+  }, [error, compressedSize, progress]);
 
   return (
     <div className={styles.fileItem}>
       <div className={styles.name}>{name}</div>
       <div className={styles.size}>{sizeDisplay}</div>
-      <div className={styles.progress}>
+      <div className={classNames(styles.progress, {
+        [styles.hasError]: error !== null,
+      })}>
         <div className={classNames(styles.progressStatus, styles.primary)}>
           {statusDisplay}
         </div>

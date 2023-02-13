@@ -6,6 +6,7 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc && vite build",
+    "deploy": "yarn build && aws s3 sync --acl public-read dist s3://we-ar-web-prod/tiny",
     "preview": "vite preview"
   },
   "dependencies": {

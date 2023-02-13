@@ -53,6 +53,18 @@
         color: #94febf;
       }
     }
+
+    &.hasError {
+      border-color: #ff0000;
+
+      .progressInner {
+        display: none;
+      }
+
+      .progressStatus {
+        color: #ff0000;
+      }
+    }
   }
 
   .percent {

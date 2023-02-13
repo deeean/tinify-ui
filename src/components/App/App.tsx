@@ -35,13 +35,15 @@ const App: FC<AppProps> = memo(() => {
     [key: string]: number;
   }>({});
 
+  const [errors, setErrors] = useState<{ [key: string]: string }>({});
+
   const hasFiles = useMemo(() => {
     return Object.keys(files).length > 0;
   }, [files]);
 
   const isReadyToDownload = useMemo(() => {
-    return Object.keys(files).every((it) => compressedSizes[it] !== undefined);
-  }, [files, compressedSizes]);
+    return Object.keys(files).every((it) => compressedSizes[it] !== undefined || errors[it] !== undefined);
+  }, [files, errors, compressedSizes]);
 
   const onDrop = useCallback((files: Array<File>) => {
     const newFiles: { [key: string]: FileInfo } = {};
@@ -116,6 +118,13 @@ const App: FC<AppProps> = memo(() => {
               });
             });
           }
+        })
+        .catch((error) => {
+          setErrors((prevState) => {
+            return produce(prevState, (draft) => {
+              draft[id] = error.message || 'Unknown Error';
+            });
+          });
         });
     }
   }, [files]);
@@ -131,6 +140,7 @@ const App: FC<AppProps> = memo(() => {
           data={it}
           progress={progresses[key] || 0}
           compressedSize={compressedSizes[key] || null}
+          error={errors[key] || null}
         />
       );
     });
